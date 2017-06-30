@@ -47,6 +47,7 @@ class ViewController: UIViewController, UITableViewDataSource, UITableViewDelega
         present(contentController, animated: true, completion: nil)
     }
     
+    // MARK: UITableViewDelegate
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         var cell:UITableViewCell! = tableView.dequeueReusableCell(withIdentifier: "cellIdentifier")
         if cell == nil {
@@ -59,6 +60,33 @@ class ViewController: UIViewController, UITableViewDataSource, UITableViewDelega
     
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         return regionNames.count
+    }
+    
+    func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        let selectedCell:UITableViewCell = tableView.cellForRow(at: indexPath)!
+        selectedCell.accessoryType = UITableViewCellAccessoryType.checkmark
+        selectedItemIndex = indexPath.row
+    }
+    
+    func tableView(_ tableView: UITableView, didDeselectRowAt indexPath: IndexPath) {
+        //
+    }
+    
+    // MARK: UIPresentationControllerDelegate
+    func adaptivePresentationStyle(for controller: UIPresentationController) -> UIModalPresentationStyle {
+        return .fullScreen
+    }
+    
+    func presentationController(_ controller: UIPresentationController, viewControllerForAdaptivePresentationStyle style: UIModalPresentationStyle) -> UIViewController? {
+        let navController: UINavigationController = UINavigationController(rootViewController: controller.presentedViewController)
+        controller.presentedViewController.navigationItem.rightBarButtonItem = UIBarButtonItem(barButtonSystemItem: UIBarButtonSystemItem.done, target: self, action: #selector(ViewController.done))
+        areaListTable.reloadData()
+        selectedItemIndex = -1
+        return navController
+    }
+    
+    func done() {
+        presentedViewController?.dismiss(animated: true, completion: nil)
     }
 
 }
