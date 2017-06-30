@@ -134,6 +134,8 @@ class ViewController: UIViewController, UITableViewDataSource, UITableViewDelega
         var annotationView:MKPinAnnotationView!
         var pointAnnotation:CustomPointAnnotation!
         
+        // Looping through all the data, creating a pin annotation for each object and
+        // creating a custom image for each one
         for item in data {
             let obj = item as! Dictionary<String, AnyObject>
             lon = obj["longitude"]!.doubleValue
@@ -147,9 +149,27 @@ class ViewController: UIViewController, UITableViewDataSource, UITableViewDelega
             } else {
                 pointAnnotation.pinCustomImageName = (incomeLevel["value"] as! String)
             }
-            
+            // Adding each annotation to the map
+            pointAnnotation.coordinate = CLLocationCoordinate2D(latitude: lat, longitude: lon)
+            pointAnnotation.title = obj["name"] as? String
+            pointAnnotation.subtitle = obj["capitalCity"] as? String
+            annotationView = MKPinAnnotationView(annotation: pointAnnotation, reuseIdentifier: "pin")
+            self.mapView.addAnnotation(annotationView.annotation!)
         }
-        
+    }
+    
+    func mapView(_ mapView: MKMapView, viewFor annotation: MKAnnotation) -> MKAnnotationView? {
+        let reuseIdentifier = "pin"
+        var v = mapView.dequeueReusableAnnotationView(withIdentifier: reuseIdentifier)
+        if v == nil {
+            v = MKAnnotationView(annotation: annotation, reuseIdentifier: reuseIdentifier)
+            v!.canShowCallout = true
+        } else {
+            v!.annotation = annotation
+        }
+        let customPointAnnotation = annotation as! CustomPointAnnotation
+        v!.image = UIImage(named:customPointAnnotation.pinCustomImageName)
+        return v
     }
 }
 
