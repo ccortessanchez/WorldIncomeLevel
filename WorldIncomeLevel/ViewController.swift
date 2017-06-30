@@ -88,7 +88,68 @@ class ViewController: UIViewController, UITableViewDataSource, UITableViewDelega
     
     func done() {
         presentedViewController?.dismiss(animated: true, completion: nil)
+        mapSearch()
     }
-
+    
+    func prepareForPopoverPresentation(_ popoverPresentationController: UIPopoverPresentationController) {
+        areaListTable.reloadData()
+        selectedItemIndex = -1
+    }
+    
+    func popoverPresentationControllerDidDismissPopover(_ popoverPresentationController: UIPopoverPresentationController) {
+        mapSearch()
+    }
+    
+    func mapSearch() {
+        if selectedItemIndex == -1 {
+            return
+        }
+        let url:NSURL = NSURL(string: "http://api.worldbank.org/country?per_page=100&ampregion=\(regionCodes[selectedItemIndex])&format=json")!
+        let task = URLSession.shared.dataTask(with: url as URL) { (data:Data?, response: URLResponse?, error:Error?) -> Void in
+            do {
+                let json = try JSONSerialization.jsonObject(with: data!, options: JSONSerialization.ReadingOptions.mutableContainers) as! NSArray
+                let dataArray = json.object(at: 1) as! NSArray
+                DispatchQueue.main.async {
+                    self.displayRegionalIncomeLevel(data: dataArray as [AnyObject])
+                }
+            } catch {
+                print("Some error occurred")
+            }
+        }
+        task.resume()
+    }
+    
+    func displayRegionalIncomeLevel(data:[AnyObject]) {
+        if data.count == 0 {
+            return
+        }
+        let regionLongitude = data[1]["longitude"]
+        let regionLatitude = data[1]["latitude"]
+        let center: CLLocationCoordinate2D = CLLocationCoordinate2D(latitude:(regionLatitude as! NSString).doubleValue, longitude:(regionLongitude as! NSString).doubleValue)
+        let region: MKCoordinateRegion = MKCoordinateRegion(center: center, span: MKCoordinateSpan(latitudeDelta:10, longitudeDelta:10))
+        self.mapView.setRegion(region, animated: true)
+        
+        var lon:Double!
+        var lat:Double!
+        var annotationView:MKPinAnnotationView!
+        var pointAnnotation:CustomPointAnnotation!
+        
+        for item in data {
+            let obj = item as! Dictionary<String, AnyObject>
+            lon = obj["longitude"]!.doubleValue
+            lat = obj["latitude"]!.doubleValue
+            
+            pointAnnotation = CustomPointAnnotation()
+            let incomeLevel:Dictionary<String,AnyObject> = obj["incomeLevel"] as! Dictionary<String,AnyObject>
+            let incomeLevelValue = (incomeLevel["value"] as! String)
+            if incomeLevelValue == "High income: OECD" || incomeLevelValue == "High income: nonOECD" {
+                pointAnnotation.pinCustomImageName = "High income"
+            } else {
+                pointAnnotation.pinCustomImageName = (incomeLevel["value"] as! String)
+            }
+            
+        }
+        
+    }
 }
 
