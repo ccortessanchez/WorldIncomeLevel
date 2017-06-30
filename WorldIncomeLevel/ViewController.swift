@@ -69,7 +69,8 @@ class ViewController: UIViewController, UITableViewDataSource, UITableViewDelega
     }
     
     func tableView(_ tableView: UITableView, didDeselectRowAt indexPath: IndexPath) {
-        //
+        let deselectedCell:UITableViewCell = tableView.cellForRow(at: indexPath)!
+        deselectedCell.accessoryType = UITableViewCellAccessoryType.none
     }
     
     // MARK: UIPresentationControllerDelegate
